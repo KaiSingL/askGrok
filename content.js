@@ -192,7 +192,14 @@ function positionButton() {
 function handleButtonClick() {
   const selection = window.getSelection().toString().trim();
   if (!selection) {return};
-  selectedQuote.textContent = selection;
+  
+  // Store full quote for submission
+  selectedQuote.dataset.fullQuote = selection;
+  
+  // Truncate for display: max 20 chars + "..."
+  const truncated = selection.length > 20 ? selection.substring(0, 20) + '...' : selection;
+  selectedQuote.textContent = truncated;
+  
   const buttonRect = popupButton.getBoundingClientRect();
   cardPopup.style.left = (buttonRect.left + buttonRect.width / 2) + 'px';
   cardPopup.style.top = (buttonRect.bottom + window.scrollY + 8) + 'px';
@@ -204,15 +211,26 @@ function handleButtonClick() {
   promptInput.focus();
 }
 
-// Handle submit (placeholder: log/alert; extend later to send to Grok API via fetch or background script)
+// Handle submit: Send to background script for Grok tab injection
 function handleSubmit() {
-  const quote = selectedQuote.textContent;
+  const fullQuote = selectedQuote.dataset.fullQuote || selectedQuote.textContent.trim();
   const prompt = promptInput.value.trim();
-  console.log('Quote:', quote);
-  console.log('Additional prompt:', prompt);
-  alert(`Submitting to Grok:\nQuote: "${quote}"\nPrompt: "${prompt || 'None'}"`);
+  if (!fullQuote) return; // No quote, bail out
+
+  // Combine into full query
+  const fullText = prompt ? `${fullQuote}\n\n${prompt}` : fullQuote;
+
+  // Send to background
+  chrome.runtime.sendMessage({ action: 'askGrok', query: fullText }, (response) => {
+    if (chrome.runtime.lastError) {
+      console.error('Content: Error sending message:', chrome.runtime.lastError);
+    } else {
+      console.log('Content: Message sent successfully');
+    }
+  });
+
+  // Hide popup
   cardPopup.classList.add('hidden');
-  popupButton.classList.remove('hidden');
 }
 
 // Event listeners
