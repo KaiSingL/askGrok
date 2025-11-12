@@ -166,6 +166,41 @@ const selectedQuote = document.getElementById('grok-selected-quote');
 const promptInput = document.getElementById('grok-prompt-input');
 const submitButton = document.getElementById('grok-submit-button');
 
+// Robust function to check if the current selection is within an editable element
+function isSelectionInEditable() {
+  const selection = window.getSelection();
+  if (selection.rangeCount === 0 || selection.isCollapsed) {
+    return false;
+  }
+
+  const range = selection.getRangeAt(0);
+  let container = range.commonAncestorContainer;
+
+  // If container is a text node, move to its parent element
+  if (container.nodeType !== Node.ELEMENT_NODE) {
+    container = container.parentElement;
+  }
+
+  if (!container) {
+    return false;
+  }
+
+  // Traverse up the DOM tree from the common ancestor container
+  // Check each element for editability (contenteditable or input/textarea)
+  while (container && container !== document.body) {
+    if (
+      container.isContentEditable ||
+      container.tagName === 'INPUT' ||
+      container.tagName === 'TEXTAREA'
+    ) {
+      return true;
+    }
+    container = container.parentElement;
+  }
+
+  return false;
+}
+
 // Position button at bottom center of selection
 function positionButton() {
   console.log('Mouseup event fired'); // Debug log
@@ -175,6 +210,14 @@ function positionButton() {
     console.log('Selection after delay:', selection.toString().trim()); // Debug log
     if (selection.rangeCount > 0 && !selection.isCollapsed) {
       console.log('Valid selection detected:', selection.toString().trim()); // Debug log
+      
+      // Check if selection is in an editable element using robust method
+      if (isSelectionInEditable()) {
+        console.log('Selection in editable element, hiding button'); // Debug log
+        popupButton.classList.add('hidden');
+        return;
+      }
+      
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       popupButton.style.left = (rect.left + rect.width / 2) + 'px';
