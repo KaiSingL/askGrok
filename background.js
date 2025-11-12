@@ -48,14 +48,24 @@ function injectAndSubmit(tabId, fullText) {
         }
         console.log('Grok Page: Found input:', input.tagName);
         
+        // Split text into lines and wrap each in <p> tags
+        const lines = text.split('\n').map(line => {
+          const trimmed = line.trimEnd();
+          if (trimmed === '') {
+            return '<p><br class="ProseMirror-trailingBreak"></p>';
+          } else {
+            return `<p>${trimmed}</p>`;
+          }
+        });
+        const htmlContent = lines.join('');
+        
         // Set text
         if (input.tagName === 'DIV' || input.contentEditable === 'true') {
-          input.textContent = text;
-          input.innerHTML = text.replace(/\n/g, '<br>');
+          input.innerHTML = htmlContent;
         } else {
-          input.value = text;
+          input.value = text; // Fallback for non-rich inputs
         }
-        console.log('Grok Page: Text set');
+        console.log('Grok Page: HTML set');
         
         input.focus();
         input.dispatchEvent(new Event('input', { bubbles: true }));

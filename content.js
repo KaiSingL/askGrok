@@ -1,7 +1,7 @@
 const style = document.createElement('style');
 style.textContent = `
   #grok-popup-button {
-    display: none;
+    display: flex;
     position: absolute;
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
@@ -9,14 +9,13 @@ style.textContent = `
     transform: translate(-50%, -50%);
     z-index: 50;
     white-space: nowrap;
-    display: flex;
     align-items: center;
     background-color: #fcfcfc;
     color: #000;
     border: 1px solid #e5e7eb;
   }
-  #grok-popup-button:not(.hidden) {
-    display: flex;
+  #grok-popup-button.hidden {
+    display: none;
   }
   #grok-popup-button svg {
     width: 1rem;
@@ -33,7 +32,7 @@ style.textContent = `
     }
   }
   #grok-card-popup {
-    display: none;
+    display: block;
     position: absolute;
     background-color: white;
     padding: 1rem;
@@ -45,8 +44,8 @@ style.textContent = `
     width: 20rem;
     transform: translateX(-50%);
   }
-  #grok-card-popup:not(.hidden) {
-    display: block;
+  #grok-card-popup.hidden {
+    display: none;
   }
   @media (prefers-color-scheme: dark) {
     #grok-card-popup {
@@ -137,8 +136,8 @@ popupButton.innerHTML = `
   </svg>
   Ask Grok
 `;
-popupButton.style.display = 'none';
 document.body.appendChild(popupButton);
+popupButton.classList.add('hidden'); // Ensure initial hidden state
 
 // Create and append card popup
 const cardPopup = document.createElement('div');
@@ -165,24 +164,34 @@ document.body.appendChild(cardPopup);
 // Get elements
 const selectedQuote = document.getElementById('grok-selected-quote');
 const promptInput = document.getElementById('grok-prompt-input');
+const submitButton = document.getElementById('grok-submit-button');
 
 // Position button at bottom center of selection
 function positionButton() {
-  const selection = window.getSelection();
-  if (selection.rangeCount > 0 && !selection.isCollapsed) {
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    popupButton.style.left = (rect.left + rect.width / 2) + 'px';
-    popupButton.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-    popupButton.style.position = 'absolute';
-    popupButton.style.display = 'flex';
-  } else {
-    popupButton.style.display = 'none';
-  }
+  console.log('Mouseup event fired'); // Debug log
+  // Add delay to allow selection to fully register
+  setTimeout(() => {
+    const selection = window.getSelection();
+    console.log('Selection after delay:', selection.toString().trim()); // Debug log
+    if (selection.rangeCount > 0 && !selection.isCollapsed) {
+      console.log('Valid selection detected:', selection.toString().trim()); // Debug log
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      popupButton.style.left = (rect.left + rect.width / 2) + 'px';
+      popupButton.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+      popupButton.style.position = 'absolute';
+      popupButton.classList.remove('hidden');
+      console.log('Popup button shown'); // Debug log
+    } else {
+      console.log('No valid selection'); // Debug log
+      popupButton.classList.add('hidden');
+    }
+  }, 0); // Zero-delay setTimeout queues after current execution
 }
 
 // Handle button click to show card
 function handleButtonClick() {
+  console.log('Popup button clicked'); // Debug log
   const selection = window.getSelection().toString().trim();
   if (!selection) {return};
   
@@ -198,27 +207,35 @@ function handleButtonClick() {
   cardPopup.style.top = (buttonRect.bottom + window.scrollY + 8) + 'px';
   cardPopup.style.position = 'absolute';
   cardPopup.classList.remove('hidden');
-  popupButton.style.display = 'none';
+  popupButton.classList.add('hidden');
   window.getSelection().removeAllRanges();
   promptInput.value = '';
   promptInput.focus();
+  console.log('Card popup shown'); // Debug log
 }
 
 // Handle submit: Send to background script for Grok tab injection
 function handleSubmit() {
+  console.log('handleSubmit called'); // Debug log
   const fullQuote = selectedQuote.dataset.fullQuote || selectedQuote.textContent.trim();
   const prompt = promptInput.value.trim();
-  if (!fullQuote) return; // No quote, bail out
+  if (!fullQuote) {
+    console.log('No fullQuote, bailing out'); // Debug log
+    return;
+  }
+  console.log('fullQuote:', fullQuote); // Debug log
+  console.log('prompt:', prompt); // Debug log
 
   // Combine into full query
-  const fullText = prompt ? `${fullQuote}\n\n${prompt}` : fullQuote;
+  const fullText = prompt ? `\`\`\`\n${fullQuote}\n\`\`\`\n\n${prompt}` : `\`\`\`\n${fullQuote}\n\`\`\``;
+  console.log('fullText to send:', fullText); // Debug log
 
   // Send to background
   chrome.runtime.sendMessage({ action: 'askGrok', query: fullText }, (response) => {
     if (chrome.runtime.lastError) {
       console.error('Content: Error sending message:', chrome.runtime.lastError);
     } else {
-      console.log('Content: Message sent successfully');
+      console.log('Content: Message sent successfully, response:', response);
     }
   });
 
@@ -230,8 +247,8 @@ function handleSubmit() {
 document.addEventListener('mouseup', positionButton);
 
 document.addEventListener('keydown', () => {
-  if (popupButton.style.display !== 'none') {
-    popupButton.style.display = 'none';
+  if (!popupButton.classList.contains('hidden')) {
+    popupButton.classList.add('hidden');
   }
 });
 
@@ -244,7 +261,6 @@ document.addEventListener('mousedown', (e) => {
 
 document.addEventListener('scroll', () => {
   popupButton.classList.add('hidden');
-  cardPopup.classList.add('hidden');
 });
 
 document.addEventListener('click', (e) => {
@@ -256,12 +272,24 @@ document.addEventListener('click', (e) => {
 
 // Button event listeners
 popupButton.addEventListener('click', handleButtonClick);
-document.getElementById('grok-submit-button').addEventListener('click', handleSubmit);
+
+// Attach submit listener with debug
+if (submitButton) {
+  submitButton.addEventListener('click', handleSubmit);
+  console.log('Submit button listener attached successfully');
+} else {
+  console.error('Submit button not found in DOM!');
+}
 
 // Enter key to submit in textarea (without Shift)
-promptInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSubmit();
-  }
-});
+if (promptInput) {
+  promptInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  });
+  console.log('Prompt input listener attached successfully');
+} else {
+  console.error('Prompt input not found in DOM!');
+}
