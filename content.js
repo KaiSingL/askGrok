@@ -1,4 +1,3 @@
-// Inject CSS styles (mimicking Tailwind classes from the demo, scoped to extension elements)
 const style = document.createElement('style');
 style.textContent = `
   #grok-popup-button {
@@ -227,6 +226,12 @@ function handleSubmit() {
 
 // Event listeners
 document.addEventListener('mouseup', positionButton);
+
+document.addEventListener('keydown', () => {
+  if (popupButton.style.display !== 'none') {
+    popupButton.style.display = 'none';
+  }
+});
 
 document.addEventListener('mousedown', (e) => {
   if (!popupButton.contains(e.target) && !cardPopup.contains(e.target)) {
