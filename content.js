@@ -91,21 +91,13 @@ style.textContent = `
     min-height: 80px;
     font-family: inherit;
     font-size: inherit;
+    background-color: #fff;
   }
   @media (prefers-color-scheme: dark) {
     #grok-prompt-input {
       background-color: #374151;
       border-color: #4b5563;
       color: white;
-    }
-  }
-  #grok-prompt-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-  @media (prefers-color-scheme: dark) {
-    #grok-prompt-input:focus {
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
     }
   }
   .grok-submit-container {
