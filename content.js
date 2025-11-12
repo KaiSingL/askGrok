@@ -220,8 +220,8 @@ function positionButton() {
       
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      popupButton.style.left = (rect.left + rect.width / 2) + 'px';
-      popupButton.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+      popupButton.style.left = (rect.left +  55) + 'px';
+      popupButton.style.top = (rect.bottom + window.scrollY + 30) + 'px';
       popupButton.style.position = 'absolute';
       popupButton.classList.remove('hidden');
       console.log('Popup button shown'); // Debug log
