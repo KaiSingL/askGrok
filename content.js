@@ -137,6 +137,7 @@ popupButton.innerHTML = `
   </svg>
   Ask Grok
 `;
+popupButton.style.display = 'none';
 document.body.appendChild(popupButton);
 
 // Create and append card popup
@@ -158,6 +159,7 @@ cardPopup.innerHTML = `
     </div>
   </div>
 `;
+cardPopup.classList.add('hidden');
 document.body.appendChild(cardPopup);
 
 // Get elements
