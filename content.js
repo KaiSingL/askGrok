@@ -13,6 +13,7 @@ style.textContent = `
     background-color: #fcfcfc;
     color: #000;
     border: 1px solid #e5e7eb;
+    font-family: sans-serif;
   }
   #grok-popup-button.hidden {
     display: none;
@@ -43,6 +44,7 @@ style.textContent = `
     max-width: 28rem;
     width: 20rem;
     transform: translateX(-50%);
+    font-family: sans-serif;
   }
   #grok-card-popup.hidden {
     display: none;
@@ -241,8 +243,8 @@ function handleButtonClick() {
   // Store full quote for submission
   selectedQuote.dataset.fullQuote = selection;
   
-  // Truncate for display: max 20 chars + "..."
-  const truncated = selection.length > 20 ? selection.substring(0, 20) + '...' : selection;
+  // Truncate for display: max 50 chars + "..."
+  const truncated = selection.length > 80 ? selection.substring(0, 80) + '...' : selection;
   selectedQuote.textContent = truncated;
   
   const buttonRect = popupButton.getBoundingClientRect();
