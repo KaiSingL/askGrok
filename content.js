@@ -1,3 +1,11 @@
+// Debug logging utility
+const debug = false;
+function debugLog(...args) {
+  if (debug) {
+    console.log('[Quick Grok Debug]', ...args);
+  }
+}
+
 const style = document.createElement('style');
 style.textContent = `
   #grok-popup-button {
@@ -205,30 +213,30 @@ function isSelectionInEditable() {
 
 // Position button at bottom center of selection
 function positionButton() {
-  console.log('Mouseup event fired'); // Debug log
+  debugLog('Mouseup event fired');
   // Add delay to allow selection to fully register
   setTimeout(() => {
     const selection = window.getSelection();
-    console.log('Selection after delay:', selection.toString().trim()); // Debug log
+    debugLog('Selection after delay:', selection.toString().trim());
     if (selection.rangeCount > 0 && !selection.isCollapsed) {
-      console.log('Valid selection detected:', selection.toString().trim()); // Debug log
-      
+      debugLog('Valid selection detected:', selection.toString().trim());
+
       // Check if selection is in an editable element using robust method
       if (isSelectionInEditable()) {
-        console.log('Selection in editable element, hiding button'); // Debug log
+        debugLog('Selection in editable element, hiding button');
         popupButton.classList.add('hidden');
         return;
       }
-      
+
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      popupButton.style.left = (rect.left +  55) + 'px';
+      popupButton.style.left = (rect.left + 55) + 'px';
       popupButton.style.top = (rect.bottom + window.scrollY + 30) + 'px';
       popupButton.style.position = 'absolute';
       popupButton.classList.remove('hidden');
-      console.log('Popup button shown'); // Debug log
+      debugLog('Popup button shown');
     } else {
-      console.log('No valid selection'); // Debug log
+      debugLog('No valid selection');
       popupButton.classList.add('hidden');
     }
   }, 0); // Zero-delay setTimeout queues after current execution
@@ -236,17 +244,17 @@ function positionButton() {
 
 // Handle button click to show card
 function handleButtonClick() {
-  console.log('Popup button clicked'); // Debug log
+  debugLog('Popup button clicked');
   const selection = window.getSelection().toString().trim();
-  if (!selection) {return};
-  
+  if (!selection) { return };
+
   // Store full quote for submission
   selectedQuote.dataset.fullQuote = selection;
-  
+
   // Truncate for display: max 50 chars + "..."
   const truncated = selection.length > 80 ? selection.substring(0, 80) + '...' : selection;
   selectedQuote.textContent = truncated;
-  
+
   const buttonRect = popupButton.getBoundingClientRect();
   cardPopup.style.left = (buttonRect.left + buttonRect.width / 2) + 'px';
   cardPopup.style.top = (buttonRect.bottom + window.scrollY + 8) + 'px';
@@ -256,31 +264,31 @@ function handleButtonClick() {
   window.getSelection().removeAllRanges();
   promptInput.value = '';
   promptInput.focus();
-  console.log('Card popup shown'); // Debug log
+  debugLog('Card popup shown');
 }
 
 // Handle submit: Send to background script for Grok tab injection
 function handleSubmit() {
-  console.log('handleSubmit called'); // Debug log
+  debugLog('handleSubmit called');
   const fullQuote = selectedQuote.dataset.fullQuote || selectedQuote.textContent.trim();
   const prompt = promptInput.value.trim();
   if (!fullQuote) {
-    console.log('No fullQuote, bailing out'); // Debug log
+    debugLog('No fullQuote, bailing out');
     return;
   }
-  console.log('fullQuote:', fullQuote); // Debug log
-  console.log('prompt:', prompt); // Debug log
+  debugLog('fullQuote:', fullQuote);
+  debugLog('prompt:', prompt);
 
   // Combine into full query
   const fullText = prompt ? `\`\`\`\n${fullQuote}\n\`\`\`\n\n${prompt}` : `\`\`\`\n${fullQuote}\n\`\`\``;
-  console.log('fullText to send:', fullText); // Debug log
+  debugLog('fullText to send:', fullText);
 
   // Send to background
   chrome.runtime.sendMessage({ action: 'askGrok', query: fullText }, (response) => {
     if (chrome.runtime.lastError) {
-      console.error('Content: Error sending message:', chrome.runtime.lastError);
+      debugLog('Content: Error sending message:', chrome.runtime.lastError);
     } else {
-      console.log('Content: Message sent successfully, response:', response);
+      debugLog('Content: Message sent successfully, response:', response);
     }
   });
 
@@ -321,9 +329,9 @@ popupButton.addEventListener('click', handleButtonClick);
 // Attach submit listener with debug
 if (submitButton) {
   submitButton.addEventListener('click', handleSubmit);
-  console.log('Submit button listener attached successfully');
+  debugLog('Submit button listener attached successfully');
 } else {
-  console.error('Submit button not found in DOM!');
+  debugLog('Submit button not found in DOM!');
 }
 
 // Enter key to submit in textarea (without Shift)
@@ -334,7 +342,7 @@ if (promptInput) {
       handleSubmit();
     }
   });
-  console.log('Prompt input listener attached successfully');
+  debugLog('Prompt input listener attached successfully');
 } else {
-  console.error('Prompt input not found in DOM!');
+  debugLog('Prompt input not found in DOM!');
 }

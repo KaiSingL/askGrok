@@ -1,7 +1,15 @@
+// Debug logging utility
+const debug = false;
+function debugLog(...args) {
+  if (debug) {
+    console.log('[Quick Grok Debug]', ...args);
+  }
+}
+
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'askGrok') {
-    console.log('Background: Received query:', message.query.substring(0, 50) + '...');
+    debugLog('Background: Received query:', message.query.substring(0, 50) + '...');
     openGrokTabAndInject(message.query);
   }
   sendResponse({ status: 'received' });
@@ -12,13 +20,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function openGrokTabAndInject(fullText) {
   // Create new active tab
   chrome.tabs.create({ url: 'https://grok.com/', active: true }, (newTab) => {
-    console.log('Background: Created new active tab:', newTab.id);
-    
+    debugLog('Background: Created new active tab:', newTab.id);
+
     // Wait for load complete, then inject
     const loadListener = (updatedTabId, changeInfo) => {
       if (updatedTabId === newTab.id && changeInfo.status === 'complete') {
         chrome.tabs.onUpdated.removeListener(loadListener);
-        console.log('Background: Tab loaded, injecting...');
+        debugLog('Background: Tab loaded, injecting...');
         injectAndSubmit(newTab.id, fullText);
       }
     };
@@ -32,8 +40,8 @@ function injectAndSubmit(tabId, fullText) {
     chrome.scripting.executeScript({
       target: { tabId },
       func: (text) => {
-        console.log('Grok Page: Injecting:', text.substring(0, 50) + '...');
-        
+        debugLog('Grok Page: Injecting:', text.substring(0, 50) + '...');
+
         // Robust selectors for input
         let input = document.querySelector('div[contenteditable="true"], textarea, input[type="text"], .prompt-textarea, [placeholder*="Ask"], [role="textbox"]');
         if (!input) {
@@ -43,11 +51,11 @@ function injectAndSubmit(tabId, fullText) {
           }
         }
         if (!input) {
-          console.error('Grok Page: Input not found - DOM may have changed');
+          debugLog('Grok Page: Input not found - DOM may have changed');
           return;
         }
-        console.log('Grok Page: Found input:', input.tagName);
-        
+        debugLog('Grok Page: Found input:', input.tagName);
+
         // Split text into lines and wrap each in <p> tags
         const lines = text.split('\n').map(line => {
           const trimmed = line.trimEnd();
@@ -58,26 +66,26 @@ function injectAndSubmit(tabId, fullText) {
           }
         });
         const htmlContent = lines.join('');
-        
+
         // Set text
         if (input.tagName === 'DIV' || input.contentEditable === 'true') {
           input.innerHTML = htmlContent;
         } else {
           input.value = text; // Fallback for non-rich inputs
         }
-        console.log('Grok Page: HTML set');
-        
+        debugLog('Grok Page: HTML set');
+
         input.focus();
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
-        
+
         // Simulate Enter after delay
         setTimeout(() => {
           const enterDown = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true });
           input.dispatchEvent(enterDown);
           const enterUp = new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true });
           input.dispatchEvent(enterUp);
-          console.log('Grok Page: Enter simulated');
+          debugLog('Grok Page: Enter simulated');
         }, 500);
       },
       args: [fullText]
