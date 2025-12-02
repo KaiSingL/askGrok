@@ -11,8 +11,8 @@ style.textContent = `
   #grok-popup-button {
     display: flex;
     position: absolute;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
+    padding: 8px 16px;
+    border-radius: 6px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     transform: translate(-50%, -50%);
     z-index: 50;
@@ -27,9 +27,9 @@ style.textContent = `
     display: none;
   }
   #grok-popup-button svg {
-    width: 1rem;
-    height: 1rem;
-    margin-right: 0.5rem;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
     display: inline-block;
     flex-shrink: 0;
   }
@@ -44,13 +44,13 @@ style.textContent = `
     display: block;
     position: absolute;
     background-color: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
+    padding: 16px;
+    border-radius: 8px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     border: 1px solid #e5e7eb;
     z-index: 50;
-    max-width: 28rem;
-    width: 20rem;
+    max-width: 448px;
+    width: 320px;
     transform: translateX(-50%);
     font-family: sans-serif;
   }
@@ -64,10 +64,10 @@ style.textContent = `
     }
   }
   .grok-quote {
-    margin-bottom: 1rem;
-    padding: 0.75rem;
+    margin-bottom: 16px;
+    padding: 12px;
     background-color: #f9fafb;
-    border-radius: 0.375rem;
+    border-radius: 6px;
   }
   @media (prefers-color-scheme: dark) {
     .grok-quote {
@@ -77,7 +77,7 @@ style.textContent = `
   #grok-selected-quote {
     font-style: italic;
     color: #4b5563;
-    font-size: 0.875rem;
+    font-size: 14px;
   }
   @media (prefers-color-scheme: dark) {
     #grok-selected-quote {
@@ -87,13 +87,13 @@ style.textContent = `
   .grok-input-container {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8px;
   }
   #grok-prompt-input {
     flex: 1;
-    padding: 0.5rem 0.75rem;
+    padding: 8px 12px;
     border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
+    border-radius: 6px;
     outline: none;
     resize: vertical;
     min-height: 80px;
@@ -110,18 +110,71 @@ style.textContent = `
   }
   .grok-submit-container {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .grok-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #4b5563;
+  }
+  @media (prefers-color-scheme: dark) {
+    .grok-checkbox {
+      color: #d1d5db;
+    }
+  }
+  .grok-checkbox input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #d1d5db;
+    background-color: #fff;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+  }
+  .grok-checkbox input[type="checkbox"]:checked {
+    background-color: #1e1d1dff;
+    border: none;
+  }
+  .grok-checkbox input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: #1e1d1dff;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  @media (prefers-color-scheme: dark) {
+    .grok-checkbox input[type="checkbox"] {
+      background-color: #374151;
+      border-color: #4b5563;
+    }
+    .grok-checkbox input[type="checkbox"]:checked {
+      background-color: #fff;
+      border: none;
+    }
+    .grok-checkbox input[type="checkbox"]:checked::after {
+      background-color: #fff;
+    }
   }
   #grok-submit-button {
     background-color: #151515;
     border: none;
     border-radius: 9999px;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.25rem;
+    padding: 4px;
     cursor: pointer;
     transition: background-color 0.15s ease;
   }
@@ -129,8 +182,8 @@ style.textContent = `
     background-color: #1f2937;
   }
   #grok-submit-button svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 20px;
+    height: 20px;
     color: white;
   }
 `;
@@ -159,6 +212,10 @@ cardPopup.innerHTML = `
   <div class="grok-input-container">
     <textarea id="grok-prompt-input" rows="3" placeholder="Add more context or a question..."></textarea>
     <div class="grok-submit-container">
+      <label class="grok-checkbox">
+        <input type="checkbox" id="include-url">
+        Include URL
+      </label>
       <button id="grok-submit-button">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0.36 0.5 33.33 32">
           <path d="M13.2371 21.0407L24.3186 12.8506C24.8619 12.4491 25.6384 12.6057 25.8973 13.2294C27.2597 16.5185 26.651 20.4712 23.9403 23.1851C21.2297 25.8989 17.4581 26.4941 14.0108 25.1386L10.2449 26.8843C15.6463 30.5806 22.2053 29.6665 26.304 25.5601C29.5551 22.3051 30.562 17.8683 29.6205 13.8673L29.629 13.8758C28.2637 7.99809 29.9647 5.64871 33.449 0.844576C33.5314 0.730667 33.6139 0.616757 33.6964 0.5L29.1113 5.09055V5.07631L13.2343 21.0436" fill="currentColor"/>
@@ -175,6 +232,7 @@ document.body.appendChild(cardPopup);
 const selectedQuote = document.getElementById('grok-selected-quote');
 const promptInput = document.getElementById('grok-prompt-input');
 const submitButton = document.getElementById('grok-submit-button');
+const includeUrlCheckbox = document.getElementById('include-url');
 
 // Robust function to check if the current selection is within an editable element
 function isSelectionInEditable() {
@@ -263,6 +321,7 @@ function handleButtonClick() {
   popupButton.classList.add('hidden');
   window.getSelection().removeAllRanges();
   promptInput.value = '';
+  includeUrlCheckbox.checked = false; // Uncheck by default
   promptInput.focus();
   debugLog('Card popup shown');
 }
@@ -272,15 +331,28 @@ function handleSubmit() {
   debugLog('handleSubmit called');
   const fullQuote = selectedQuote.dataset.fullQuote || selectedQuote.textContent.trim();
   const prompt = promptInput.value.trim();
+  const includeUrl = includeUrlCheckbox.checked;
   if (!fullQuote) {
     debugLog('No fullQuote, bailing out');
     return;
   }
   debugLog('fullQuote:', fullQuote);
   debugLog('prompt:', prompt);
+  debugLog('includeUrl:', includeUrl);
 
-  // Combine into full query
-  const fullText = prompt ? `\`\`\`\n${fullQuote}\n\`\`\`\n\n${prompt}` : `\`\`\`\n${fullQuote}\n\`\`\``;
+  // Base query components
+  const quoteBlock = `\`\`\`\n${fullQuote}\n\`\`\``;
+  const optionalPrompt = prompt ? `\n\n${prompt}` : '';
+
+  let fullText;
+  if (includeUrl) {
+    // Get current page full URL for site: operator (hidden from UI)
+    const siteUrl = window.location.href;
+    const sitePrefix = `site: ${siteUrl}`;
+    fullText = `${sitePrefix}\n\n${quoteBlock}${optionalPrompt}`;
+  } else {
+    fullText = `${quoteBlock}${optionalPrompt}`;
+  }
   debugLog('fullText to send:', fullText);
 
   // Send to background
