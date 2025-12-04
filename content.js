@@ -272,42 +272,63 @@ function isSelectionInEditable() {
 // Position button at bottom center of selection
 function positionButton() {
   debugLog('Mouseup event fired');
-  // Add delay to allow selection to fully register
+  // PLAN: Grab selection IMMEDIATELY—no setTimeout delay to beat React/event collapses
+  const selection = window.getSelection();
+  const selectedText = selection.toString().trim();
+  debugLog('Immediate selection:', selectedText);
+
+  // PLAN: Primary check on selectedText truthiness, with fallbacks
+  if (!selectedText || selection.rangeCount === 0 || selection.isCollapsed) {
+    debugLog('No valid selection (immediate check)');
+    popupButton.classList.add('hidden');
+    return;
+  }
+
+  debugLog('Valid selection detected:', selectedText);
+
+  // Check if selection is in an editable element using robust method
+  if (isSelectionInEditable()) {
+    debugLog('Selection in editable element, hiding button');
+    popupButton.classList.add('hidden');
+    return;
+  }
+
+  // PLAN: Store text in dataset immediately for handleButtonClick fallback
+  popupButton.dataset.selection = selectedText;
+
+  // PLAN: Wrap range access in try-catch to avoid crashes on empty/invalid rects
+  let rect;
+  try {
+    const range = selection.getRangeAt(0);
+    rect = range.getBoundingClientRect();
+  } catch (e) {
+    debugLog('Range rect error:', e);
+    popupButton.classList.add('hidden');
+    return;
+  }
+
+  popupButton.style.left = (rect.left + 55) + 'px';
+  popupButton.style.top = (rect.bottom + window.scrollY + 30) + 'px';
+  popupButton.style.position = 'absolute';
+  popupButton.classList.remove('hidden');
+
+  // PLAN: Bulletproof visibility—zero-delay setTimeout to enforce display
   setTimeout(() => {
-    const selection = window.getSelection();
-    debugLog('Selection after delay:', selection.toString().trim());
-    if (selection.rangeCount > 0 && !selection.isCollapsed) {
-      debugLog('Valid selection detected:', selection.toString().trim());
-
-      // Check if selection is in an editable element using robust method
-      if (isSelectionInEditable()) {
-        debugLog('Selection in editable element, hiding button');
-        popupButton.classList.add('hidden');
-        return;
-      }
-
-      // FIX: Capture and store selection text immediately to prevent loss on click
-      const selectedText = selection.toString().trim();
-      popupButton.dataset.selection = selectedText;
-
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      popupButton.style.left = (rect.left + 55) + 'px';
-      popupButton.style.top = (rect.bottom + window.scrollY + 30) + 'px';
-      popupButton.style.position = 'absolute';
-      popupButton.classList.remove('hidden');
-      debugLog('Popup button shown with stored selection:', selectedText);
-    } else {
-      debugLog('No valid selection');
-      popupButton.classList.add('hidden');
+    popupButton.classList.remove('hidden');
+    const computedStyle = window.getComputedStyle(popupButton);
+    if (computedStyle.display === 'none') {
+      popupButton.style.display = 'flex';
     }
-  }, 0); // Zero-delay setTimeout queues after current execution
+    debugLog('Visibility enforced');
+  }, 0);
+
+  debugLog('Popup button shown with stored selection:', selectedText);
 }
 
 // Handle button click to show card
 function handleButtonClick() {
   debugLog('Popup button clicked');
-  // FIX: Use stored selection first (fallback to live if missing)
+  // PLAN: Use stored selection first (fallback to live if missing)
   let selection = popupButton.dataset.selection || window.getSelection().toString().trim();
   if (!selection) { 
     debugLog('No selection available (stored or live)');
@@ -323,10 +344,56 @@ function handleButtonClick() {
   selectedQuote.textContent = truncated;
 
   const buttonRect = popupButton.getBoundingClientRect();
-  cardPopup.style.left = (buttonRect.left + buttonRect.width / 2) + 'px';
-  cardPopup.style.top = (buttonRect.bottom + window.scrollY + 8) + 'px';
+  let popupTop = buttonRect.bottom + 8;
+  let popupLeft = buttonRect.left + buttonRect.width / 2;
+
+  // ENHANCEMENT: Initial positioning (below button, centered)
+  cardPopup.style.left = popupLeft + 'px';
+  cardPopup.style.top = (popupTop + window.scrollY) + 'px';
   cardPopup.style.position = 'absolute';
   cardPopup.classList.remove('hidden');
+
+  // ENHANCEMENT: Zero-delay measure & adjust for viewport fit
+  setTimeout(() => {
+    const popupRect = cardPopup.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+
+    // Vertical adjustment: Prefer below; flip above if overflows bottom, nudge if top
+    let adjustedTop = popupTop + scrollY;
+    if (popupRect.bottom > viewportHeight) {
+      // Flip above if space allows (with buffer)
+      const spaceAbove = buttonRect.top - popupRect.height - 8;
+      if (spaceAbove > 0) {
+        adjustedTop = (buttonRect.top - popupRect.height - 8) + scrollY;
+        debugLog('Flipped popup above button');
+      } else {
+        // Nudge up to fit bottom
+        adjustedTop = (viewportHeight - popupRect.height) + scrollY;
+        debugLog('Nudged popup up to fit viewport');
+      }
+    } else if (popupRect.top < 0) {
+      // Nudge down if overflows top (rare, but safe)
+      adjustedTop = scrollY + 8;
+    }
+
+    // Horizontal adjustment: Center-clamp to fit (respects translateX(-50%))
+    let adjustedLeft = popupLeft;
+    const halfWidth = popupRect.width / 2;
+    if (popupRect.left < 0) {
+      adjustedLeft = halfWidth + 8; // Shift right, small buffer
+    } else if (popupRect.right > viewportWidth) {
+      adjustedLeft = (viewportWidth - halfWidth) - 8; // Shift left
+    }
+
+    // Apply adjustments
+    cardPopup.style.top = adjustedTop + 'px';
+    cardPopup.style.left = adjustedLeft + 'px';
+
+    debugLog('Viewport adjustments applied:', { adjustedTop, adjustedLeft });
+  }, 0);
+
   popupButton.classList.add('hidden');
   window.getSelection().removeAllRanges();
   promptInput.value = '';
@@ -378,7 +445,8 @@ function handleSubmit() {
 }
 
 // Event listeners
-document.addEventListener('mouseup', positionButton);
+// PLAN: Early event listening—add { capture: true, passive: true } for pristine access without blocking
+document.addEventListener('mouseup', positionButton, { capture: true, passive: true });
 
 document.addEventListener('keydown', () => {
   if (!popupButton.classList.contains('hidden')) {
