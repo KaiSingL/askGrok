@@ -286,13 +286,17 @@ function positionButton() {
         return;
       }
 
+      // FIX: Capture and store selection text immediately to prevent loss on click
+      const selectedText = selection.toString().trim();
+      popupButton.dataset.selection = selectedText;
+
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       popupButton.style.left = (rect.left + 55) + 'px';
       popupButton.style.top = (rect.bottom + window.scrollY + 30) + 'px';
       popupButton.style.position = 'absolute';
       popupButton.classList.remove('hidden');
-      debugLog('Popup button shown');
+      debugLog('Popup button shown with stored selection:', selectedText);
     } else {
       debugLog('No valid selection');
       popupButton.classList.add('hidden');
@@ -303,13 +307,18 @@ function positionButton() {
 // Handle button click to show card
 function handleButtonClick() {
   debugLog('Popup button clicked');
-  const selection = window.getSelection().toString().trim();
-  if (!selection) { return };
+  // FIX: Use stored selection first (fallback to live if missing)
+  let selection = popupButton.dataset.selection || window.getSelection().toString().trim();
+  if (!selection) { 
+    debugLog('No selection available (stored or live)');
+    return;
+  }
+  debugLog('Using selection:', selection);
 
   // Store full quote for submission
   selectedQuote.dataset.fullQuote = selection;
 
-  // Truncate for display: max 50 chars + "..."
+  // Truncate for display: max 80 chars + "..."
   const truncated = selection.length > 80 ? selection.substring(0, 80) + '...' : selection;
   selectedQuote.textContent = truncated;
 
