@@ -52,19 +52,6 @@ A Chrome browser extension that lets you select text on any webpage and quickly 
 - **Content Script**: Injects UI elements and handles user interactions
 - **Content Scripts**: Runs on all websites with proper permissions
 
-### File Structure
-
-```
-quick-grok-extension/
-├── manifest.json          # Extension manifest and configuration
-├── background.js          # Service worker for tab management
-├── content.js             # Content script for UI and interactions
-├── icon16.png             # 16x16 extension icon
-├── icon48.png             # 48x48 extension icon
-├── icon128.png            # 128x128 extension icon
-└── README.md              # This file
-```
-
 ### Permissions
 
 The extension requires the following permissions:
@@ -72,16 +59,6 @@ The extension requires the following permissions:
 - `tabs`: To create new tabs and interact with them
 - `scripting`: To inject scripts into the Grok website
 - `host_permissions`: `https://grok.com/*` to access and interact with Grok
-
-### How It Works
-
-1. **Text Selection Detection**: The content script monitors for text selection on any webpage
-2. **UI Injection**: When text is selected, a "Ask Grok" button appears positioned above the selection
-3. **Popup Interface**: Clicking the button opens a popup with the selected text and an input field for additional context
-4. **Background Processing**: The content script sends the query to the background service worker
-5. **Tab Management**: The background script creates a new Grok tab and waits for it to load
-6. **Text Injection**: Once loaded, the extension automatically injects the selected text and any additional context into Grok's input field
-7. **Auto-submit**: The extension simulates pressing Enter to automatically submit the query
 
 ## Development
 
@@ -133,13 +110,4 @@ This extension requires no build process - it's a pure JavaScript extension usin
 - Ensure all required files are present
 - Try reloading the extension in developer mode
 
-## License
 
-This project is open source. Please check the repository for specific license details.
-
-
-
----
-
-**Version**: 1.0  
-**Last Updated**: November 2025
